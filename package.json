@@ -16,7 +16,7 @@
     "lint": "eslint src/**/*.ts"
   },
   "prisma": {
-  "seed": "node dist/prisma/seed.js"
+  "seed": "node prisma/seed.js"
 },
   "keywords": [
     "finance",
