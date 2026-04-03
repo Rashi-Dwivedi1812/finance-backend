@@ -38,7 +38,7 @@ All endpoints return standardized JSON responses with consistent error handling,
 | **TypeScript** | Type safety and developer experience |
 | **Express.js** | HTTP framework |
 | **Prisma ORM** | Database access and schema management |
-| **SQLite** | Lightweight database (easily swappable to PostgreSQL) |
+| **PostgreSQL (Render)** | Production database |
 | **JWT (jsonwebtoken)** | Stateless authentication |
 | **bcryptjs** | Password hashing |
 | **Zod** | Request validation with type inference |
@@ -90,16 +90,16 @@ cp .env.example .env
 
 #### Environment Variables
 
-| Variable | Description | Default |
+| Variable | Description | Example |
 |---|---|---|
-| `DATABASE_URL` | Database connection string | `file:./dev.db` |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:password@host:5432/db` |
 | `JWT_SECRET` | Secret key for JWT signing | (required) |
 | `JWT_EXPIRES_IN` | Token expiration time | `24h` |
 | `PORT` | Server port | `3000` |
-| `NODE_ENV` | Environment mode | `development` |
-| `RATE_LIMIT_WINDOW_MS` | Rate limit window (ms) | `900000` (15 min) |
+| `NODE_ENV` | Environment mode | `development` / `production` |
+| `RATE_LIMIT_WINDOW_MS` | Rate limit window (ms) | `900000` |
 | `RATE_LIMIT_MAX_REQUESTS` | Max requests per window | `10` |
-| `CORS_ORIGIN` | Allowed CORS origin | `*` |
+| `CORS_ORIGIN` | Allowed frontend origin | `https://your-frontend.com` |
 
 ### Seeded Test Credentials
 
@@ -119,6 +119,46 @@ npm run seed         # Seed database with sample data
 npm test             # Run tests
 npx prisma studio    # Open Prisma Studio (DB GUI)
 ```
+
+---
+
+## 🚀 Deployment (Render)
+
+This backend is deployed on **Render** using:
+
+- **Node.js Web Service**
+- **PostgreSQL Database (Render Managed DB)**
+
+### Live URL:
+👉 https://finance-backend-40m2.onrender.com
+
+### Deployment Steps:
+
+1. Push code to GitHub
+2. Connect repo to Render
+3. Set:
+   - Build Command:
+     ```
+     npm install && npm run build
+     ```
+   - Start Command:
+     ```
+     npm start
+     ```
+4. Add environment variables:
+   - `DATABASE_URL` (PostgreSQL)
+   - `JWT_SECRET`
+5. Prisma automatically runs:
+   - migrations (`prisma migrate deploy`)
+   - seed script (`node prisma/seed.js`)
+
+---
+
+### ⚠️ Notes:
+
+- SQLite is **NOT used in production**
+- PostgreSQL is required for deployment
+- Seed runs automatically after build
 
 ---
 
@@ -420,17 +460,20 @@ Each module follows the **Controller → Service → Model** pattern:
 
 ## 📝 Assumptions Made
 
-1. **SQLite is used** for simplicity; the schema is fully compatible with PostgreSQL by changing the Prisma provider
-2. **Default role is VIEWER** when registering without specifying a role
-3. **All new users start as ACTIVE** by default
-4. **Soft delete** is used for transactions — they are never permanently removed
-5. **User deletion** soft-deletes all associated transactions before removing the user record
-6. **Amount is stored as Float** (suitable for most use cases; for production financial systems, use Decimal)
-7. **Rate limiting** applies only to auth routes (register + login) — 10 requests per 15 minutes per IP
-8. **JWT tokens expire in 24 hours** by default (configurable via env)
-9. **Search** is case-sensitive in SQLite (would be case-insensitive with PostgreSQL `ilike`)
-10. **Monthly trends** are ordered chronologically based on transaction dates
-11. **Weekly summary** covers the last 7 calendar days from now
+1.## 📝 Assumptions Made
+
+1. **PostgreSQL is used in production (Render DB)**
+2. **SQLite is used** for simplicity; the schema is fully compatible with PostgreSQL by changing the Prisma provider
+3. **Default role is VIEWER** when registering without specifying a role
+4. **All new users start as ACTIVE** by default
+5. **Soft delete** is used for transactions — they are never permanently removed
+6. **User deletion** soft-deletes all associated transactions before removing the user record
+7. **Amount is stored as Float** (suitable for most use cases; for production financial systems, use Decimal)
+8. **Rate limiting** applies only to auth routes (register + login) — 10 requests per 15 minutes per IP
+9. **JWT tokens expire in 24 hours** by default (configurable via env)
+10. **Search** is case-sensitive in SQLite (would be case-insensitive with PostgreSQL `ilike`)
+11. **Monthly trends** are ordered chronologically based on transaction dates
+12. **Weekly summary** covers the last 7 calendar days from now
 
 ---
 
@@ -438,7 +481,7 @@ Each module follows the **Controller → Service → Model** pattern:
 
 | Decision | Rationale |
 |---|---|
-| **SQLite over PostgreSQL** | Simpler setup for development/demo; easily swappable via Prisma provider |
+| **PostgreSQL over SQLite** | Required for production deployment (Render) and better scalability |
 | **Zod over Joi** | Better TypeScript inference, smaller bundle, more modern API |
 | **Static class methods** | Clean service layer without instantiation; works well for stateless operations |
 | **Singleton Prisma client** | Prevents connection pool exhaustion during hot-reloading |
