@@ -4,7 +4,7 @@
   "description": "Production-quality Finance Data Processing and Access Control Backend",
   "main": "dist/app.js",
   "scripts": {
-    "build": "prisma generate && tsc",
+    "build": "prisma generate && prisma migrate deploy && prisma db seed && tsc",
     "start": "node dist/app.js",
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
     "prisma:generate": "prisma generate",
