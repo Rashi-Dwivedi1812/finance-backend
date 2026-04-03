@@ -20,7 +20,10 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || '*',
+    origin:
+  process.env.NODE_ENV === 'production'
+    ? 'https://finance-backend-40m2.onrender.com'
+    : 'http://localhost:3000',
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
@@ -55,11 +58,17 @@ const swaggerOptions: swaggerJsdoc.Options = {
       },
     },
     servers: [
-      {
-        url: `http://localhost:${PORT}`,
-        description: 'Development server',
-      },
-    ],
+  {
+    url:
+      process.env.NODE_ENV === 'production'
+        ? 'https://finance-backend-40m2.onrender.com'
+        : `http://localhost:${PORT}`,
+    description:
+      process.env.NODE_ENV === 'production'
+        ? 'Production server'
+        : 'Development server',
+  },
+],
     components: {
       securitySchemes: {
         bearerAuth: {
